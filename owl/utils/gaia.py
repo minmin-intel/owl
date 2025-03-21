@@ -227,7 +227,7 @@ class GAIABenchmark(BaseBenchmark):
                     assistant_agent_kwargs=assistant_agent_kwargs,
                 )
 
-                raw_answer, chat_history, token_info = run_society(society)
+                raw_answer, chat_history, token_info, completion_tokens, prompt_tokens = run_society(society)
                 try:
                     answer = extract_pattern(raw_answer, "final_answer")
                 except Exception as e:
@@ -250,6 +250,8 @@ class GAIABenchmark(BaseBenchmark):
                     "score": self.question_scorer(answer, task["Final answer"]),
                     "token_info": token_info,
                     "history": chat_history,
+                    "completion_tokens": completion_tokens,
+                    "prompt_tokens": prompt_tokens,
                 }
                 self._results.append(_result_info)
 

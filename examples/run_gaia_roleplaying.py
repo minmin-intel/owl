@@ -47,9 +47,9 @@ set_log_level(level="DEBUG")
 logger = get_logger(__name__)
 
 # Configuration
-LEVEL = 1
+LEVEL = "all"#1
 SAVE_RESULT = True
-test_idx = [0]
+test_idx = [10]
 
 
 def main():

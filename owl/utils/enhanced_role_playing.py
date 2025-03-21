@@ -444,6 +444,9 @@ def run_society(
     overall_completion_token_count = 0
     overall_prompt_token_count = 0
 
+    completion_token_list = []
+    prompt_token_list = []
+
     chat_history = []
     init_prompt = """
     Now please give me instructions to solve over overall task step by step. If the task requires some specific knowledge, please instruct me to use tools to complete the task.
@@ -459,6 +462,15 @@ def run_society(
             overall_prompt_token_count += assistant_response.info["usage"].get(
                 "prompt_tokens", 0
             ) + user_response.info["usage"].get("prompt_tokens", 0)
+
+            completion_token_list.append(
+                assistant_response.info["usage"].get("completion_tokens", 0))
+            prompt_token_list.append(
+                assistant_response.info["usage"].get("prompt_tokens", 0))
+            completion_token_list.append(
+                user_response.info["usage"].get("completion_tokens", 0))
+            prompt_token_list.append(
+                user_response.info["usage"].get("prompt_tokens", 0))    
 
         # convert tool call to dict
         tool_call_records: List[dict] = []
@@ -499,7 +511,7 @@ def run_society(
         "prompt_token_count": overall_prompt_token_count,
     }
 
-    return answer, chat_history, token_info
+    return answer, chat_history, token_info, completion_token_list, prompt_token_list
 
 
 async def arun_society(
