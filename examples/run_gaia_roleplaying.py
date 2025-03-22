@@ -30,7 +30,7 @@ from camel.toolkits import (
     FileWriteToolkit,
 )
 from camel.types import ModelPlatformType, ModelType
-from camel.configs import ChatGPTConfig, TogetherAIConfig
+from camel.configs import ChatGPTConfig, TogetherAIConfig, DeepSeekConfig
 
 from owl.utils import GAIABenchmark
 from camel.logger import set_log_level
@@ -49,16 +49,17 @@ logger = get_logger(__name__)
 # Configuration
 LEVEL = "all"#1
 SAVE_RESULT = True
-test_idx = [10]
+test_idx = None #[1]
 
 
 def main():
 
     parser = argparse.ArgumentParser(description='Run GAIA benchmark')
-    parser.add_argument('--level', type=int, default=1, help='Level of the benchmark')
-    parser.add_argument('--save_result', type=bool, default=True, help='Save the result')
+    parser.add_argument("--test_type", type=str, default="text", help="text or image")
     parser.add_argument("--model_provider", type=str, default="openai", help="Model provider")
+    parser.add_argument("--save_to", type=str, default="result", help="Save results to")
     args = parser.parse_args()
+    assert args.test_type in ["text", "image"], "Test type must be either text or image"
 
     """Main function to run the GAIA benchmark."""
     # Create cache directory
@@ -72,72 +73,94 @@ def main():
         chat_model = ModelType.GPT_4O
         vlm = ModelType.GPT_4O
         model_config = ChatGPTConfig(temperature=0, top_p=1).as_dict()
+        chat_platform = platform
+        chat_model_config = model_config
+        vlm_platform = platform
+        vlm_model_config = model_config
     elif args.model_provider == "together":
         platform = ModelPlatformType.TOGETHER
         chat_model = "meta-llama/Llama-3.3-70B-Instruct-Turbo"
-        vlm = "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo" 
-        model_config = TogetherAIConfig(temperature=0.2).as_dict()
+        # vlm = "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo" 
+        vlm="Qwen/Qwen2-VL-72B-Instruct"
+        model_config = TogetherAIConfig(temperature=0.6).as_dict()
+        chat_platform = platform
+        chat_model_config = model_config
+        vlm_platform = platform
+        vlm_model_config = model_config
+    elif args.model_provider == "hybrid":
+        chat_platform = ModelPlatformType.DEEPSEEK
+        chat_model = ModelType.DEEPSEEK_CHAT
+        chat_model_config=DeepSeekConfig(temperature=0.6).as_dict()
+        vlm_platform = ModelPlatformType.TOGETHER
+        vlm = "Qwen/Qwen2-VL-72B-Instruct"
+        # vlm = "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo"
+        vlm_model_config = TogetherAIConfig(temperature=0.2).as_dict()
     else:
         raise ValueError(f"Model provider {args.model_provider} is not supported.")
 
     # Create models for different components
     models = {
         "user": ModelFactory.create(
-            model_platform=platform,
+            model_platform=chat_platform,
             model_type=chat_model,
-            model_config_dict=model_config,
+            model_config_dict=chat_model_config,
         ),
         "assistant": ModelFactory.create(
-            model_platform=platform,
+            model_platform=chat_platform,
             model_type=chat_model,
-            model_config_dict=model_config,
+            model_config_dict=chat_model_config,
         ),
-        "browsing": ModelFactory.create(
-            model_platform=platform,
-            model_type=vlm,
-            model_config_dict=model_config,
-        ),
-        "planning": ModelFactory.create(
-            model_platform=platform,
-            model_type=chat_model,
-            model_config_dict=model_config,
-        ),
-        "video": ModelFactory.create(
-            model_platform=platform,
-            model_type=vlm,
-            model_config_dict=model_config,
-        ),
+        # "browsing": ModelFactory.create(
+        #     model_platform=vlm_platform,
+        #     model_type=vlm,
+        #     model_config_dict=model_config,
+        # ),
+        # "planning": ModelFactory.create(
+        #     model_platform=platform,
+        #     model_type=chat_model,
+        #     model_config_dict=model_config,
+        # ),
+        # "video": ModelFactory.create(
+        #     model_platform=platform,
+        #     model_type=vlm,
+        #     model_config_dict=model_config,
+        # ),
         "image": ModelFactory.create(
-            model_platform=platform,
+            model_platform=vlm_platform,
             model_type=vlm,
-            model_config_dict=model_config,
+            model_config_dict=vlm_model_config,
         ),
     }
 
     # Configure toolkits
     tools = [
-        *BrowserToolkit(
-            headless=False,  # Set to True for headless mode (e.g., on remote servers)
-            web_agent_model=models["browsing"],
-            planning_agent_model=models["planning"],
-        ).get_tools(),
+        # *BrowserToolkit(
+        #     headless=False,  # Set to True for headless mode (e.g., on remote servers)
+        #     web_agent_model=models["browsing"],
+        #     planning_agent_model=models["planning"],
+        # ).get_tools(), # two agents in the tool: planning agent(reasoning model) and web agent (VLM)
         # *VideoAnalysisToolkit(
         #     model=models["video"]
         # ).get_tools(),  # This requires OpenAI Key
         # *AudioAnalysisToolkit().get_tools(),  # This requires OpenAI Key
-        *CodeExecutionToolkit(sandbox="subprocess", verbose=True).get_tools(),
-        *ImageAnalysisToolkit(model=models["image"]).get_tools(),
-        *SearchToolkit().get_tools(),
-        *ExcelToolkit().get_tools(),
-        *FileWriteToolkit(output_dir="./").get_tools(),
+        *CodeExecutionToolkit(sandbox="subprocess", verbose=True).get_tools(), #no model needed
+        *ImageAnalysisToolkit(model=models["image"]).get_tools(), # need VLM
+        SearchToolkit().get_tools()[0], # wiki, google, ddg, tavily 0,2,3,5
+        SearchToolkit().get_tools()[2], # google
+        SearchToolkit().get_tools()[3], # ddg
+        SearchToolkit().get_tools()[5], #tavily
+        *ExcelToolkit().get_tools(), # no model needed
+        *FileWriteToolkit(output_dir="./").get_tools(), # no model needed
     ]
+
+    print(tools)
 
     # Configure agent roles and parameters
     user_agent_kwargs = {"model": models["user"]}
     assistant_agent_kwargs = {"model": models["assistant"], "tools": tools}
 
     # Initialize benchmark
-    benchmark = GAIABenchmark(data_dir="data/gaia", save_to="results/result.json")
+    benchmark = GAIABenchmark(data_dir="data/gaia", save_to=f"results/{args.save_to}.json", test_type=args.test_type)
 
     # Print benchmark information
     print(f"Number of validation examples: {len(benchmark.valid)}")

@@ -151,13 +151,10 @@ You should instruct me not ask me questions.
 Please note that the task may be very complicated. Do not attempt to solve the task by single step. You must instruct me to find the answer step by step.
 Here are some tips that will help you to give more valuable instructions about our task to me:
 <tips>
-- I have various tools to use, such as search toolkit, web browser simulation toolkit, document relevant toolkit, code execution toolkit, etc. Thus, You must think how human will solve the task step-by-step, and give me instructions just like that. For example, one may first use google search to get some initial information and the target url, then retrieve the content of the url, or do some web browser interaction to find the answer.
+- I have various tools to use, such as search toolkit, image analysis toolkit, document relevant toolkit, code execution toolkit, etc. Thus, You must think how human will solve the task step-by-step, and give me instructions just like that. For example, one may first use google search to get some initial information and the target url, then retrieve the content of the url, or do some web browser interaction to find the answer.
 - Although the task is complex, the answer does exist. If you can't find the answer using the current scheme, try to re-plan and use other ways to find the answer, e.g. using other tools or methods that can achieve similar results.
 - Always remind me to verify my final answer about the overall task. This work can be done by using multiple tools(e.g., screenshots, webpage analysis, etc.), or something else.
 - If I have written code, please remind me to run the code and get the result.
-- Search results typically do not provide precise answers. It is not likely to find the answer directly using search toolkit only, the search query should be concise and focuses on finding sources rather than direct answers, as it always need to use other tools to further process the url, e.g. interact with the webpage, extract webpage content, etc. 
-- If the question mentions youtube video, in most cases you have to process the content of the mentioned video.
-- For downloading files, you can either use the web browser simulation toolkit or write codes (for example, the github content can be downloaded via https://raw.githubusercontent.com/...).
 - Flexibly write codes to solve some problems, such as excel relevant tasks.
 </tips>
 
@@ -187,7 +184,6 @@ Solution: [YOUR_SOLUTION]
 Please note that our overall task may be very complicated. Here are some tips that may help you solve the task:
 <tips>
 - If one way fails to provide an answer, try other ways or methods. The answer does exists.
-- If the search snippet is unhelpful but the URL comes from an authoritative source, try visit the website for more details.  
 - When looking for specific numerical values (e.g., dollar amounts), prioritize reliable sources and avoid relying only on search snippets.  
 - When solving tasks that require web searches, check Wikipedia first before exploring other websites.  
 - When trying to solve math problems, you can try to write python code and use sympy library to solve the problem.
@@ -195,8 +191,6 @@ Please note that our overall task may be very complicated. Here are some tips th
 - Do not be overly confident in your own knowledge. Searching can provide a broader perspective and help validate existing knowledge.  
 - After writing codes, do not forget to run the code and get the result. If it encounters an error, try to debug it. Also, bear in mind that the code execution environment does not support interactive input.
 - When a tool fails to run, or the code does not run correctly, never assume that it returns the correct result and continue to reason based on the assumption, because the assumed result cannot lead you to the correct answer. The right way is to think about the reason for the error and try again.
-- Search results typically do not provide precise answers. It is not likely to find the answer directly using search toolkit only, the search query should be concise and focuses on finding sources rather than direct answers, as it always need to use other tools to further process the url, e.g. interact with the webpage, extract webpage content, etc. 
-- For downloading files, you can either use the web browser simulation toolkit or write codes.
 </tips>
 
         """

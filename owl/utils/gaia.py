@@ -50,6 +50,7 @@ class GAIABenchmark(BaseBenchmark):
         data_dir: str,
         save_to: str,
         processes: int = 1,
+        test_type: str = "text",
     ):
         r"""Initialize the GAIA benchmark.
 
@@ -60,6 +61,7 @@ class GAIABenchmark(BaseBenchmark):
                 parallel processing. (default: :obj:`1`)
         """
         super().__init__("gaia", data_dir, save_to, processes)
+        self.test_type = test_type
 
     def download(self):
         r"""Download the GAIA dataset."""
@@ -120,7 +122,8 @@ class GAIABenchmark(BaseBenchmark):
         # Load metadata for both validation and test datasets
         for path, label in zip([valid_dir, test_dir], ["valid", "test"]):
             self._data[label] = []
-            with open(path / "metadata.jsonl", "r") as f:
+            metadata_file = f"metadata_filtered_{self.test_type}_sampled.jsonl"
+            with open(path / metadata_file, "r") as f:
                 lines = f.readlines()
                 for line in lines:
                     data = json.loads(line)
