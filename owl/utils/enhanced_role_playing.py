@@ -151,7 +151,7 @@ You should instruct me not ask me questions.
 Please note that the task may be very complicated. Do not attempt to solve the task by single step. You must instruct me to find the answer step by step.
 Here are some tips that will help you to give more valuable instructions about our task to me:
 <tips>
-- I have various tools to use, such as search toolkit, image analysis toolkit, document relevant toolkit, code execution toolkit, etc. Thus, You must think how human will solve the task step-by-step, and give me instructions just like that. For example, one may first use google search to get some initial information and the target url, then retrieve the content of the url, or do some web browser interaction to find the answer.
+- I have various tools to use, such as web search toolkit, image analysis toolkit, document relevant toolkit, code execution toolkit, etc. Thus, You must think how human will solve the task step-by-step, and give me instructions just like that.
 - Although the task is complex, the answer does exist. If you can't find the answer using the current scheme, try to re-plan and use other ways to find the answer, e.g. using other tools or methods that can achieve similar results.
 - Always remind me to verify my final answer about the overall task. This work can be done by using multiple tools(e.g., screenshots, webpage analysis, etc.), or something else.
 - If I have written code, please remind me to run the code and get the result.

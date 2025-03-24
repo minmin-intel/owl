@@ -35,6 +35,8 @@ from camel.configs import ChatGPTConfig, TogetherAIConfig, DeepSeekConfig
 from owl.utils import GAIABenchmark
 from camel.logger import set_log_level
 
+from tools.web_search import search_web_tool
+
 import pathlib
 import argparse
 
@@ -49,11 +51,16 @@ logger = get_logger(__name__)
 # Configuration
 LEVEL = "all"#1
 SAVE_RESULT = True
-test_idx = None #[1]
+test_idx = [0]
 
+def print_tools(tools):
+    for tool in tools:
+        print(tool.get_function_name())
+        print(tool.get_function_description())
+        print(tool.get_openai_function_schema())
+        print("="*50)
 
 def main():
-
     parser = argparse.ArgumentParser(description='Run GAIA benchmark')
     parser.add_argument("--test_type", type=str, default="text", help="text or image")
     parser.add_argument("--model_provider", type=str, default="openai", help="Model provider")
@@ -133,28 +140,39 @@ def main():
     }
 
     # Configure toolkits
-    tools = [
-        # *BrowserToolkit(
-        #     headless=False,  # Set to True for headless mode (e.g., on remote servers)
-        #     web_agent_model=models["browsing"],
-        #     planning_agent_model=models["planning"],
-        # ).get_tools(), # two agents in the tool: planning agent(reasoning model) and web agent (VLM)
-        # *VideoAnalysisToolkit(
-        #     model=models["video"]
-        # ).get_tools(),  # This requires OpenAI Key
-        # *AudioAnalysisToolkit().get_tools(),  # This requires OpenAI Key
-        *CodeExecutionToolkit(sandbox="subprocess", verbose=True).get_tools(), #no model needed
-        *ImageAnalysisToolkit(model=models["image"]).get_tools(), # need VLM
-        SearchToolkit().get_tools()[0], # wiki, google, ddg, tavily 0,2,3,5
-        SearchToolkit().get_tools()[2], # google
-        SearchToolkit().get_tools()[3], # ddg
-        SearchToolkit().get_tools()[5], #tavily
-        *ExcelToolkit().get_tools(), # no model needed
-        *FileWriteToolkit(output_dir="./").get_tools(), # no model needed
-    ]
+    if args.test_type == "image":
+        tools = [
+            # *BrowserToolkit(
+            #     headless=False,  # Set to True for headless mode (e.g., on remote servers)
+            #     web_agent_model=models["browsing"],
+            #     planning_agent_model=models["planning"],
+            # ).get_tools(), # two agents in the tool: planning agent(reasoning model) and web agent (VLM)
+            # *VideoAnalysisToolkit(
+            #     model=models["video"]
+            # ).get_tools(),  # This requires OpenAI Key
+            # *AudioAnalysisToolkit().get_tools(),  # This requires OpenAI Key
+            *CodeExecutionToolkit(sandbox="subprocess", verbose=True).get_tools(), #no model needed
+            *ImageAnalysisToolkit(model=models["image"]).get_tools(), # need VLM
+            # SearchToolkit().get_tools()[0], # wiki, google, ddg, tavily 0,2,3,5
+            # SearchToolkit().get_tools()[2], # google
+            # SearchToolkit().get_tools()[3], # ddg
+            # SearchToolkit().get_tools()[5], #tavily
+            search_web_tool,
+            *ExcelToolkit().get_tools(), # no model needed
+            *FileWriteToolkit(output_dir="./").get_tools(), # no model needed
+        ]
+    elif args.test_type == "text":
+        tools = [
+            *CodeExecutionToolkit(sandbox="subprocess", verbose=True).get_tools(), #no model needed
+            search_web_tool,
+            *ExcelToolkit().get_tools(), # no model needed
+            *FileWriteToolkit(output_dir="./").get_tools(), # no model needed
+        ]
+    else:
+        raise ValueError(f"Test type {args.test_type} is not supported.")
 
-    print(tools)
-
+    print_tools(tools)
+    
     # Configure agent roles and parameters
     user_agent_kwargs = {"model": models["user"]}
     assistant_agent_kwargs = {"model": models["assistant"], "tools": tools}
